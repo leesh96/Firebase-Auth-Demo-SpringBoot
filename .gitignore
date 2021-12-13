@@ -6,7 +6,7 @@ build/
 !**/src/test/**/build/
 
 ### Firebase ###
-/was_keys/*
+/src/main/resources/keystore/*
 
 ### STS ###
 .apt_generated
@@ -19,6 +19,7 @@ build/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
+/src/main/resources/application.yml
 
 ### IntelliJ IDEA ###
 .idea

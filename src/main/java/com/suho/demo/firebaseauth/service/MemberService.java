@@ -6,8 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class MemberService implements UserDetailsService {
 
@@ -15,10 +19,18 @@ public class MemberService implements UserDetailsService {
 
     @Override
     public Member loadUserByUsername(String uid) throws UsernameNotFoundException {
-        return memberRepository.findByFirebaseUID(uid).get();
+        return memberRepository.findByFirebaseUID(uid).orElseThrow();
     }
 
+    @Transactional
     public Member signIn(Member member) {
-        return memberRepository.save(member);
+        Optional<Member> signInMember = memberRepository.findByFirebaseUID(member.getFirebaseUID());
+
+        return signInMember.orElseGet(() -> memberRepository.save(member));
+    }
+
+    @Transactional
+    public void withdraw(Member member) {
+        memberRepository.delete(member);
     }
 }

@@ -8,10 +8,8 @@ import com.suho.demo.firebaseauth.domain.Member;
 import com.suho.demo.firebaseauth.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
@@ -28,11 +26,11 @@ public class MemberApiController {
 
         try {
             if (header == null || !header.startsWith("Bearer ")) {
-                throw new IllegalArgumentException("Invalid Authorization Header");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Request Header");
             }
             firebaseToken = firebaseAuth.verifyIdToken(header.substring(7));
         } catch (IllegalArgumentException | FirebaseAuthException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "{\"code\":\"INVALID_TOKEN\", \"message\":\"" + e.getMessage() + "\"}");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "{\"code\":\"Invalid Token\", \"message\":\"" + e.getMessage() + "\"}");
         }
 
         return new MemberResponse(memberService.signIn(Member.builder()
@@ -41,5 +39,18 @@ public class MemberApiController {
                 .firebaseUID(firebaseToken.getUid())
                 .build()
         ));
+    }
+
+    @GetMapping("/login")
+    public MemberResponse login(Authentication authentication) {
+        Member member = ((Member) authentication.getPrincipal());
+        return new MemberResponse(member);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/withdraw")
+    public void withdraw(Authentication authentication) {
+        Member member = ((Member) authentication.getPrincipal());
+        memberService.withdraw(member);
     }
 }
